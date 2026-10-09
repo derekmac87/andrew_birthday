@@ -43,6 +43,7 @@ nav button{
 nav button.active{background:var(--gold);color:#2a0845;box-shadow:0 6px 0 #b8860b}
 nav .spacer{flex:1}
 .iconbtn{font-size:26px;padding:10px 16px;border-radius:14px;background:var(--panel)}
+.iconbtn.navtxt{font-size:clamp(18px,1.8vw,26px);white-space:nowrap}
 main{padding:10px 24px 40px}
 .screen{display:none}
 .screen.active{display:block;animation:fadein .35s}
@@ -94,7 +95,12 @@ main{padding:10px 24px 40px}
 .hub img{width:74%;height:74%;object-fit:contain;user-select:none;-webkit-user-drag:none;pointer-events:none}
 .pointer{position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:0;height:0;border-left:28px solid transparent;border-right:28px solid transparent;border-top:56px solid var(--gold);filter:drop-shadow(0 4px 4px #000a);z-index:2}
 .wheelside{min-width:300px;max-width:420px;text-align:center}
-#wheelResult{font-size:clamp(34px,4vw,64px);min-height:1.3em;color:var(--gold);text-shadow:3px 3px 0 var(--pink)}
+#wheelResult{font-size:clamp(34px,4vw,64px);line-height:1.15;color:var(--gold);text-shadow:3px 3px 0 var(--pink);margin:4px 0 2px;overflow:hidden}
+#wheelResult:empty{display:none}
+#wheelResult:not(:empty){animation:resultIn .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes resultIn{from{max-height:0;opacity:0;transform:scale(.6)}to{max-height:3em;opacity:1;transform:scale(1)}}
+.wheelside .headline{margin:0 0 4px}
+#spinInfo{margin:6px 0 14px}
 /* cases */
 .cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:22px;max-width:1400px;margin:0 auto}
 .case{
@@ -157,6 +163,7 @@ main{padding:10px 24px 40px}
   nav{padding:16px 32px;gap:16px}
   nav button{font-size:32px;padding:18px 34px}
   .iconbtn{font-size:34px}
+  .iconbtn.navtxt{font-size:32px}
   main{padding:14px 40px 50px}
   .panel{max-width:1700px;padding:34px}
   .sub{font-size:28px}
@@ -193,6 +200,7 @@ main{padding:10px 24px 40px}
   nav button{font-size:15px;padding:10px 12px;border-radius:12px;flex:1 1 auto}
   nav .spacer{display:none}
   .iconbtn{font-size:20px;padding:8px 12px;flex:0 0 auto!important}
+  .iconbtn.navtxt{font-size:15px;padding:10px 12px}
   main{padding:4px 10px 30px}
   .panel{padding:16px;border-radius:18px;margin:10px auto}
   .pick-mode .big{font-size:30px;padding:24px 20px;min-width:0;width:100%}
@@ -249,7 +257,7 @@ main{padding:10px 24px 40px}
 <header>
   <h1 class="title" id="title">🍁 Birthday Bonanza!</h1>
   <div class="score">
-    <div class="chip"><div class="lbl">PICKS</div><div class="val" id="sPicks">0</div></div>
+    <div class="chip"><div class="lbl">CASES</div><div class="val" id="sPicks">0</div></div>
     <div class="chip spins"><div class="lbl">SPINS</div><div class="val" id="sSpins">0</div></div>
     <button class="syncchip" id="syncBtn" title="Live sync status">📴 Local</button>
   </div>
@@ -260,6 +268,7 @@ main{padding:10px 24px 40px}
   <button data-screen="cases">💼 Briefcases</button>
   <span class="spacer"></span>
   <button class="iconbtn" id="muteBtn" title="Sound on/off">🔊</button>
+  <button class="iconbtn navtxt" id="grantSpin" title="Host: give 1 spin">+1 spin</button>
   <button data-screen="setup">⚙️ Setup</button>
 </nav>
 <main>
@@ -272,9 +281,6 @@ main{padding:10px 24px 40px}
         <button class="big gold" id="btnBet">🎲 BET</button>
       </div>
       <p class="sub">Win a round to earn a spin of the Prize Wheel!</p>
-      <div class="row" style="margin-top:10px">
-        <select id="triviaChoose" style="font-size:18px;max-width:600px"></select>
-      </div>
     </div>
 
     <div class="panel center hidden" id="chTrivia">
@@ -330,12 +336,6 @@ main{padding:10px 24px 40px}
         <div id="wheelResult"></div>
         <p class="sub" id="spinInfo"></p>
         <button class="big gold" id="spinBtn" style="width:100%;font-size:44px">SPIN!</button>
-        <div class="row" style="margin-top:20px">
-          <button class="med" id="grantSpin">+1 spin (host)</button>
-          <button class="med" id="grantPick">+1 pick (host)</button>
-          <button class="med" id="toCases">💼 Briefcases</button>
-          <button class="med" id="toChallenge">🎯 Challenge</button>
-        </div>
       </div>
     </div>
   </section>
@@ -345,10 +345,6 @@ main{padding:10px 24px 40px}
     <div class="center">
       <div class="headline" style="margin-bottom:4px">💼 Pick a Briefcase!</div>
       <p class="sub" id="casesInfo"></p>
-      <div class="row hostrow" style="margin:6px 0 4px">
-        <button class="med" id="grantPick2">+1 pick (host)</button>
-        <button class="med" id="grantSpin2">+1 spin (host)</button>
-      </div>
     </div>
     <div class="cases" id="caseGrid"></div>
   </section>
@@ -375,7 +371,7 @@ main{padding:10px 24px 40px}
         <div>
           <label>Manual adjust (host)</label>
           <div class="row" style="justify-content:flex-start;margin-top:6px">
-            <button class="med" data-adj="picks:-1">−1 pick</button><button class="med" data-adj="picks:1">+1 pick</button>
+            <button class="med" data-adj="picks:-1">−1 case</button><button class="med" data-adj="picks:1">+1 case</button>
             <button class="med" data-adj="spins:-1">−1 spin</button><button class="med" data-adj="spins:1">+1 spin</button>
           </div>
         </div>
@@ -408,7 +404,7 @@ main{padding:10px 24px 40px}
     </div>
     <div class="panel">
       <h2>🎡 Wheel segments</h2>
-      <div class="sub">Type: Picks / Spins / Bust. Value can be positive or negative (e.g. −1). Counts never go below 0. Every segment has an equal chance (add duplicates to weight).</div>
+      <div class="sub">Type: Cases (briefcases you can open) / Spins / Bust. Value can be positive or negative (e.g. −1). Counts never go below 0. Every segment has an equal chance (add duplicates to weight).</div>
       <div class="seg small" style="opacity:1"><b>Label</b><b>Type</b><b>Value</b><b>Color</b><b></b></div>
       <div id="cfgWheel"></div>
       <button class="med gold" id="addSeg">+ Add segment</button>
@@ -419,7 +415,7 @@ main{padding:10px 24px 40px}
         <button class="big cyan" id="reshuffle">🔀 Save &amp; reshuffle briefcases</button>
         <button class="big red" id="resetGame">♻️ Reset game</button>
       </div>
-      <p class="small">"Save setup" keeps the current briefcase board unless the briefcase contents changed. "Reset game" zeroes picks/spins, resets the briefcases and clears used trivia.</p>
+      <p class="small">"Save setup" keeps the current briefcase board unless the briefcase contents changed. "Reset game" zeroes cases/spins, resets the briefcases and clears used trivia.</p>
       <div class="row" style="margin-top:14px">
         <button class="med" id="exportBtn">⬇️ Export setup (JSON)</button>
         <button class="med" id="importBtn">⬆️ Import setup (JSON)</button>
@@ -501,18 +497,18 @@ const DEFAULT_CONFIG = {
     {cat:'General', text:'Can Andrew draw a recognizable Pikachu in 30 seconds?'}
   ],
   wheel: [
-    {label:'+1 PICK',  type:'picks', value:1,  color:'#1e5bc6'},
+    {label:'+1 CASE',  type:'picks', value:1,  color:'#1e5bc6'},
     {label:'+1 SPIN',  type:'spins', value:1,  color:'#3ee0ff'},
-    {label:'+2 PICKS', type:'picks', value:2,  color:'#e0a800'},
-    {label:'-1 PICK',  type:'picks', value:-1, color:'#d63a3a'},
-    {label:'+2 PICKS', type:'picks', value:2,  color:'#2ebd5f'},
+    {label:'+2 CASES', type:'picks', value:2,  color:'#e0a800'},
+    {label:'-1 CASE',  type:'picks', value:-1, color:'#d63a3a'},
+    {label:'+2 CASES', type:'picks', value:2,  color:'#2ebd5f'},
     {label:'BUST',     type:'bust',  value:0,  color:'#333344'},
     {label:'+2 SPINS', type:'spins', value:2,  color:'#ff3e8a'},
-    {label:'+1 PICK',  type:'picks', value:1,  color:'#00205b'},
+    {label:'+1 CASE',  type:'picks', value:1,  color:'#00205b'},
     {label:'-1 SPIN',  type:'spins', value:-1, color:'#ff7a1c'},
-    {label:'+3 PICKS', type:'picks', value:3,  color:'#8a2be2'},
-    {label:'-2 PICKS', type:'picks', value:-2, color:'#9e1238'},
-    {label:'+2 PICKS', type:'picks', value:2,  color:'#1aa6b7'}
+    {label:'+3 CASES', type:'picks', value:3,  color:'#8a2be2'},
+    {label:'-2 CASES', type:'picks', value:-2, color:'#9e1238'},
+    {label:'+2 CASES', type:'picks', value:2,  color:'#1aa6b7'}
   ],
   grandPrize: 'Tickets to the Leafs game on November 21st! 🍁🏒',
   prizes: [
@@ -530,12 +526,15 @@ const DEFAULT_CONFIG = {
 };
 const clone = o => JSON.parse(JSON.stringify(o));
 function normBets(arr){ return (Array.isArray(arr)?arr:[]).map(b=> typeof b==='string' ? {cat:'General',text:b} : {cat:String(b.cat||'General').trim()||'General', text:String(b.text||'').trim()}).filter(b=>b.text); }
+/* older versions called briefcase-openers "picks"; show them as "cases" */
+function renamePicks(t){ return String(t).replace(/(\d\s*)PICK(S?)\b/g,'$1CASE$2').replace(/(\d\s*)[Pp]ick(s?)\b/g,'$1case$2').replace(/Host adjust: picks ([+-]?\d+)/,'Host adjust: $1 cases'); }
 function normWheel(arr){
   const out=(Array.isArray(arr)?arr:[]).map(s=>{
     if(!s) return null;
     if(s.type==='again') return {label:s.label||'+1 SPIN',type:'spins',value:1,color:s.color||'#888888'};
     if(!['picks','spins','bust'].includes(s.type)) return null;
-    return {label:String(s.label||'?'),type:s.type,value:Math.round(+s.value||0),color:s.color||'#888888'};
+    const lbl=renamePicks(String(s.label||'?'));
+    return {label:lbl,type:s.type,value:Math.round(+s.value||0),color:s.color||'#888888'};
   }).filter(Boolean);
   return out.length ? out : clone(DEFAULT_CONFIG.wheel);
 }
@@ -580,6 +579,7 @@ function normGame(g){
   if(!g || !Array.isArray(g.cases) || !Array.isArray(g.pool)) return freshGame();
   const out=Object.assign(freshGame(), g);
   out.spins=Math.max(0,out.spins|0); out.picks=Math.max(0,out.picks|0);
+  out.log=(Array.isArray(out.log)?out.log:[]).map(renamePicks);
   return out;
 }
 function load(){
@@ -631,6 +631,7 @@ function show(name){
   if(name==='wheel') drawWheel();
   if(name==='cases') renderCases();
   if(name==='setup') renderSetup();
+  updateNavGrant();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav button[data-screen]').forEach(b=>b.addEventListener('click',()=>{ sfx.click(); show(b.dataset.screen); }));
@@ -695,11 +696,6 @@ const LEAFS_COLORS=['#00205b','#ffffff','#1e5bc6','#ffffff','#00205b','#cfe0ff']
 /* ---------- Challenge: Trivia ---------- */
 let curQ=-1, judged=false;
 function chMode(m){ ['chPick','chTrivia','chBet'].forEach(id=>$(id).classList.toggle('hidden', id!==m)); }
-function fillTriviaChooser(){
-  const s=$('triviaChoose'); s.innerHTML='';
-  s.append(el('option',{value:'',textContent:'…or host picks a specific question ▾'}));
-  config.trivia.forEach((t,i)=>s.append(el('option',{value:i,textContent:(game.usedTrivia.includes(i)?'✓ ':'')+'#'+(i+1)+': '+t.q})));
-}
 function randomQuestion(){
   if(!config.trivia.length){ toast('No trivia questions — add some in Setup'); return -1; }
   let pool=config.trivia.map((_,i)=>i).filter(i=>!game.usedTrivia.includes(i) && i!==curQ);
@@ -740,13 +736,12 @@ function judgeRound(won, what){
   else { $('betJudge').classList.add('hidden'); $('betAfter').classList.remove('hidden'); $('bGoSpin').classList.toggle('hidden',!won); }
 }
 $('btnTrivia').addEventListener('click',()=>startTrivia(randomQuestion()));
-$('triviaChoose').addEventListener('change',e=>{ if(e.target.value!=='') startTrivia(+e.target.value); e.target.value=''; });
 $('tReveal').addEventListener('click',()=>{ revealTrivia(); sfx.reveal(); });
 $('tMarkRight').addEventListener('click',()=>{ revealTrivia(); judgeRound(true,'Trivia #'+(curQ+1)); });
 $('tMarkWrong').addEventListener('click',()=>{ revealTrivia(); judgeRound(false,'Trivia #'+(curQ+1)); });
 $('tSkip').addEventListener('click',()=>startTrivia(randomQuestion()));
-$('tNext').addEventListener('click',()=>{ sfx.click(); fillTriviaChooser(); chMode('chPick'); });
-$('tGoSpin').addEventListener('click',()=>{ sfx.click(); fillTriviaChooser(); chMode('chPick'); show('wheel'); });
+$('tNext').addEventListener('click',()=>{ sfx.click(); chMode('chPick'); });
+$('tGoSpin').addEventListener('click',()=>{ sfx.click(); chMode('chPick'); show('wheel'); });
 
 /* ---------- Challenge: Bet ---------- */
 let betCat=null;
@@ -776,8 +771,8 @@ $('betLock').addEventListener('click',lockBet);
 $('betCancel').addEventListener('click',()=>{ sfx.click(); chMode('chPick'); });
 $('betWon').addEventListener('click',()=>judgeRound(true,'Bet "'+$('betText').textContent+'"'));
 $('betLost').addEventListener('click',()=>judgeRound(false,'Bet "'+$('betText').textContent+'"'));
-$('bNext').addEventListener('click',()=>{ sfx.click(); fillTriviaChooser(); chMode('chPick'); });
-$('bGoSpin').addEventListener('click',()=>{ sfx.click(); fillTriviaChooser(); chMode('chPick'); show('wheel'); });
+$('bNext').addEventListener('click',()=>{ sfx.click(); chMode('chPick'); });
+$('bGoSpin').addEventListener('click',()=>{ sfx.click(); chMode('chPick'); show('wheel'); });
 
 /* ---------- Wheel ---------- */
 const wc=$('wheel'), wx=wc.getContext('2d'); let rot=0, spinning=false;
@@ -813,7 +808,7 @@ function applySegment(s){
 }
 function resultText(s){
   const v=s.value|0, abs=Math.abs(v);
-  if(s.type==='picks') return v>=0 ? '+'+abs+' PICK'+(abs===1?'':'S')+'! 💼' : '−'+abs+' PICK'+(abs===1?'':'S')+' 😬';
+  if(s.type==='picks') return v>=0 ? '+'+abs+' CASE'+(abs===1?'':'S')+'! 💼' : '−'+abs+' CASE'+(abs===1?'':'S')+' 😬';
   if(s.type==='spins') return v>=0 ? '+'+abs+' SPIN'+(abs===1?'':'S')+'! 🔁' : '−'+abs+' SPIN'+(abs===1?'':'S')+' 😬';
   return 'BUST! 💥';
 }
@@ -847,20 +842,17 @@ function spin(){
 }
 $('spinBtn').addEventListener('click',spin);
 $('wheel').addEventListener('click',spin);
-function hostGrant(kind){ game[kind]++; addLog('Host granted +1 '+(kind==='picks'?'pick':'spin')); save(); renderScore(); sfx.click(); }
-$('grantSpin').addEventListener('click',()=>hostGrant('spins'));
-$('grantPick').addEventListener('click',()=>hostGrant('picks'));
-$('grantSpin2').addEventListener('click',()=>hostGrant('spins'));
-$('grantPick2').addEventListener('click',()=>hostGrant('picks'));
+function hostGrant(kind){ game[kind]++; addLog('Host granted +1 '+(kind==='picks'?'case':'spin')); save(); renderScore(); sfx.click(); }
+function navGrantKind(){ return currentScreen()==='cases' ? 'picks' : 'spins'; }
+function updateNavGrant(){ const b=$('grantSpin'), k=navGrantKind(); b.textContent = k==='picks' ? '+1 case' : '+1 spin'; b.title = k==='picks' ? 'Host: give 1 case' : 'Host: give 1 spin'; }
+$('grantSpin').addEventListener('click',()=>hostGrant(navGrantKind()));
 $('wheelHub').addEventListener('click',spin);
-$('toCases').addEventListener('click',()=>show('cases'));
-$('toChallenge').addEventListener('click',()=>show('challenge'));
 
 /* ---------- Briefcases ---------- */
 function prizesHidden(){ return game.pool.filter(p=>p!=null).length + ((config.grandPrize && !game.cases.some(c=>c.grand))?1:0); }
 function renderCasesInfo(){
   const left=game.cases.filter(c=>!c.opened).length, ph=Math.min(prizesHidden(),left);
-  $('casesInfo').textContent='You have '+game.picks+' pick'+(game.picks===1?'':'s')+' · '+left+' case'+(left===1?'':'s')+' left · '+ph+' prize'+(ph===1?'':'s')+' still hidden';
+  $('casesInfo').textContent='You can open '+game.picks+' case'+(game.picks===1?'':'s')+' · '+left+' briefcase'+(left===1?'':'s')+' left · '+ph+' prize'+(ph===1?'':'s')+' still hidden';
 }
 let revealing=false;
 function renderCases(){
@@ -878,7 +870,7 @@ function renderCases(){
 }
 function openCase(i){
   const c=game.cases[i]; if(!c || c.opened || revealing) return;
-  if(game.picks<1){ toast('No picks left — spin the wheel to earn picks!'); sfx.lose(); return; }
+  if(game.picks<1){ toast('No cases to open — spin the wheel to earn more!'); sfx.lose(); return; }
   const left=game.cases.filter(x=>!x.opened).length;
   const grandGiven=game.cases.some(x=>x.grand);
   if(config.grandPrize && !grandGiven && (left===1 || !game.pool.length)){ c.content=config.grandPrize; c.grand=true; }
@@ -967,7 +959,7 @@ function renderWheelEditor(){
   const box=$('cfgWheel'); box.innerHTML='';
   config.wheel.forEach((s,i)=>{
     const lab=el('input',{value:s.label}); lab.dataset.f='label';
-    const typ=el('select'); [['picks','Picks'],['spins','Spins'],['bust','Bust']].forEach(([v,t])=>typ.append(el('option',{value:v,textContent:t,selected:s.type===v}))); typ.dataset.f='type';
+    const typ=el('select'); [['picks','Cases'],['spins','Spins'],['bust','Bust']].forEach(([v,t])=>typ.append(el('option',{value:v,textContent:t,selected:s.type===v}))); typ.dataset.f='type';
     const val=el('input',{type:'number',value:s.value}); val.dataset.f='value';
     const col=el('input',{type:'color',value:/^#[0-9a-f]{6}$/i.test(s.color)?s.color:'#888888'}); col.dataset.f='color';
     const del=el('button',{className:'med red',textContent:'🗑'}); del.addEventListener('click',()=>{ readSetup(); config.wheel.splice(i,1); renderWheelEditor(); });
@@ -997,21 +989,21 @@ function readSetup(){
 }
 function resetBoard(){ const b=newBoard(); game.cases=b.cases; game.pool=b.pool; game.sig=b.sig; }
 $('addQ').addEventListener('click',()=>{ readSetup(); config.trivia.push({q:'',options:['','','',''],answer:0}); renderTriviaEditor(); const qs=document.querySelectorAll('#cfgTrivia .q'); qs[qs.length-1].focus(); });
-$('addSeg').addEventListener('click',()=>{ readSetup(); config.wheel.push({label:'+1 PICK',type:'picks',value:1,color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')}); renderWheelEditor(); });
+$('addSeg').addEventListener('click',()=>{ readSetup(); config.wheel.push({label:'+1 CASE',type:'picks',value:1,color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0')}); renderWheelEditor(); });
 $('saveCfg').addEventListener('click',()=>{
   readSetup();
   if(caseSignature()!==game.sig){ resetBoard(); toast('Saved! Briefcase contents changed, so the briefcases were reset.'); }
   else toast('Setup saved ✔');
   game.usedTrivia=game.usedTrivia.filter(i=>i<config.trivia.length);
-  save({cfg:true}); renderScore(); renderSetup(); fillTriviaChooser(); drawWheel(); sfx.click();
+  save({cfg:true}); renderScore(); renderSetup(); drawWheel(); sfx.click();
 });
 $('reshuffle').addEventListener('click',()=>{ readSetup(); resetBoard(); addLog('Briefcases reset'); save({cfg:true}); renderScore(); renderSetup(); toast('Saved & briefcases reset 🔀'); });
 $('resetGame').addEventListener('click',()=>{
-  if(!confirm('Reset the game? Picks, spins and opened briefcases will be cleared (your setup is kept).')) return;
-  readSetup(); game=freshGame(); addLog('Game reset'); save({cfg:true}); renderScore(); renderSetup(); fillTriviaChooser(); chMode('chPick'); $('wheelResult').textContent=''; toast('Game reset!');
+  if(!confirm('Reset the game? Cases, spins and opened briefcases will be cleared (your setup is kept).')) return;
+  readSetup(); game=freshGame(); addLog('Game reset'); save({cfg:true}); renderScore(); renderSetup(); chMode('chPick'); $('wheelResult').textContent=''; toast('Game reset!');
 });
 document.querySelectorAll('[data-adj]').forEach(b=>b.addEventListener('click',()=>{
-  const [k,v]=b.dataset.adj.split(':'); game[k]=Math.max(0,game[k]+(+v)); addLog('Host adjust: '+k+' '+(v>0?'+':'')+v); save(); renderScore(); renderSetup(); sfx.click();
+  const [k,v]=b.dataset.adj.split(':'); game[k]=Math.max(0,game[k]+(+v)); addLog('Host adjust: '+(v>0?'+':'')+v+' '+(k==='picks'?'case':'spin')+(Math.abs(v)===1?'':'s')); save(); renderScore(); renderSetup(); sfx.click();
 }));
 $('exportBtn').addEventListener('click',()=>{
   readSetup(); save({cfg:true});
@@ -1025,13 +1017,13 @@ $('importFile').addEventListener('change',e=>{
   rd.onload=()=>{ try{
       let d=JSON.parse(rd.result); if(d.config) d=d.config;
       if(!d || typeof d!=='object') throw new Error('bad');
-      config=normConfig(d); resetBoard(); game.usedTrivia=[]; addLog('Setup imported'); save({cfg:true}); renderScore(); renderSetup(); fillTriviaChooser(); drawWheel(); toast('Setup imported ✔ (briefcases reset)');
+      config=normConfig(d); resetBoard(); game.usedTrivia=[]; addLog('Setup imported'); save({cfg:true}); renderScore(); renderSetup(); drawWheel(); toast('Setup imported ✔ (briefcases reset)');
     }catch(err){ toast('Could not read that JSON file'); } };
   rd.readAsText(f); e.target.value='';
 });
 $('defaultsBtn').addEventListener('click',()=>{
   if(!confirm('Replace your setup with the sample setup?')) return;
-  config=clone(DEFAULT_CONFIG); resetBoard(); game.usedTrivia=[]; save({cfg:true}); renderScore(); renderSetup(); fillTriviaChooser(); drawWheel(); toast('Sample setup restored');
+  config=clone(DEFAULT_CONFIG); resetBoard(); game.usedTrivia=[]; save({cfg:true}); renderScore(); renderSetup(); drawWheel(); toast('Sample setup restored');
 });
 
 /* ---------- Live sync via ntfy.sh (no account; topic = hard-to-guess game id) ---------- */
@@ -1136,13 +1128,13 @@ function applyRemote(kind,rev,obj){
   if(rev<=revs[kind]) return;
   revs[kind]=rev;
   if(kind==='cfg'){
-    config=normConfig(obj); storeLocal(); renderScore(); fillTriviaChooser(); drawWheel();
+    config=normConfig(obj); storeLocal(); renderScore(); drawWheel();
     if(currentScreen()==='setup' && !document.activeElement.closest('#screen-setup')) renderSetup();
   } else {
     const ev=obj.ev; game=normGame(obj); storeLocal();
     if(ev && Sync.ready && !seenEv.has(ev.id) && Math.abs(Date.now()-(ev.at||0))<=90000){ playRemoteEvent(ev); }
     else if(ev) seenEv.add(ev.id);
-    renderScore(); fillTriviaChooser();
+    renderScore();
     if(currentScreen()==='cases' && !revealing) renderCases();
     if(currentScreen()==='setup' && !document.activeElement.closest('#screen-setup')) renderSetup();
   }
@@ -1151,7 +1143,7 @@ function shareUrl(id){ const base=location.href.split('#')[0].split('?')[0]; ret
 function randomId(){ const a='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', r=new Uint8Array(22); crypto.getRandomValues(r); return Array.from(r,x=>a[x%a.length]).join(''); }
 function renderSyncPanel(){
   if(gameId){
-    $('syncDesc').textContent='This game is LIVE. Open the same link on the phone, laptop and TV — they all share one game (picks, spins, briefcases, used questions, setup). Status: '+$('syncBtn').textContent+'. If the connection drops, this device keeps working and catches up when it reconnects.';
+    $('syncDesc').textContent='This game is LIVE. Open the same link on the phone, laptop and TV — they all share one game (cases, spins, briefcases, used questions, setup). Status: '+$('syncBtn').textContent+'. If the connection drops, this device keeps working and catches up when it reconnects.';
     $('shareLink').value=shareUrl(gameId); $('leaveLive').classList.remove('hidden');
   } else {
     $('syncDesc').textContent='This device is playing OFFLINE (saved only in this browser). Press "Start a NEW live game" to get a link that keeps phone, laptop and TV in sync.';
@@ -1178,7 +1170,7 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- Boot ---------- */
 load(); if(game.ev) seenEv.add(game.ev.id);
-renderScore(); fillTriviaChooser(); drawWheel();
+renderScore(); drawWheel();
 Sync.start();
 window.__bday={get game(){return game}, get config(){return config}, get sync(){return Sync.status}};
 })();
