@@ -57,7 +57,7 @@ main{padding:10px 24px 40px}
 .big.green{background:var(--green);color:#063a16;box-shadow:0 8px 0 #179a43}
 .big.red{background:var(--red);box-shadow:0 8px 0 #a32626}
 .big.ghost{background:var(--panel2);box-shadow:0 8px 0 #0005}
-.big:disabled{opacity:.4;cursor:not-allowed}
+.big:disabled,.med:disabled{opacity:.4;cursor:not-allowed}
 .med{font-size:20px;padding:12px 20px;border-radius:14px;background:var(--panel2)}
 .med.gold{background:var(--gold);color:#2a0845}
 .med.red{background:var(--red)}
@@ -123,6 +123,9 @@ main{padding:10px 24px 40px}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.25) rotate(4deg)}100%{transform:scale(0) rotate(30deg);opacity:0}}
 .revealtext{font-size:clamp(46px,7vw,120px);color:var(--gold);text-shadow:5px 5px 0 var(--pink);display:none;max-width:90vw;line-height:1.1}
 .revealtext.show{display:block;animation:zoom .6s cubic-bezier(.2,1.6,.4,1)}
+.revealtext.spintext{color:#3ee0ff;text-shadow:5px 5px 0 #00205b}
+.case.opened.spincase{background:linear-gradient(180deg,#3ee0ff,#1b8fd6);color:#00205b}
+.case.opened.spincase .num{background:#00205b22;color:#00205b}
 .revealtext.nothing{color:#bbb;text-shadow:4px 4px 0 #000}
 @keyframes zoom{from{transform:scale(.1);opacity:0}to{transform:scale(1);opacity:1}}
 .overlay .label{font-size:clamp(28px,3vw,48px);color:var(--cyan)}
@@ -237,12 +240,13 @@ main{padding:10px 24px 40px}
 .bigcase.grandcase .num{background:#00205b;color:#fff;border-color:#fff}
 .bigcase.shakehard{animation:shake .07s infinite;filter:drop-shadow(0 0 30px #fff)}
 .revealtext.grandtext{color:#fff;text-shadow:0 0 18px #3e8bff,5px 5px 0 #00205b;font-size:clamp(40px,6vw,100px)}
-@media (max-width:640px){ .syncchip{font-size:13px;padding:6px 8px} .prizeimg{max-height:28vh} }
+#grantPanel .big{font-size:clamp(24px,2.4vw,40px);padding:14px 28px}
+@media (max-width:640px){ #grantPanel .big{font-size:22px;padding:12px 18px} .syncchip{font-size:13px;padding:6px 8px} .prizeimg{max-height:28vh} }
 </style>
 </head>
 <body>
 <header>
-  <h1 class="title" id="title">🍁 Birthday Bonanza!</h1>
+  <h1 class="title" id="title">🍁 Birthday Bonanza! 🍺</h1>
   <div class="score">
     <div class="chip"><div class="lbl">CASES</div><div class="val" id="sPicks">0</div></div>
     <div class="chip spins"><div class="lbl">SPINS</div><div class="val" id="sSpins">0</div></div>
@@ -255,7 +259,6 @@ main{padding:10px 24px 40px}
   <button data-screen="cases">💼 Briefcases</button>
   <span class="spacer"></span>
   <button class="iconbtn" id="muteBtn" title="Sound on/off">🔊</button>
-  <button class="iconbtn navtxt" id="grantSpin" title="Host: give 1 spin">+1 spin</button>
   <button data-screen="setup">⚙️ Setup</button>
 </nav>
 <main>
@@ -268,7 +271,7 @@ main{padding:10px 24px 40px}
       </div>
       <p class="sub" id="chPickSub">Answer correctly to earn a spin of the Prize Wheel!</p>
       <div class="hidden" id="chDone">
-        <div class="betcard" style="border-color:#fff;font-size:clamp(26px,3.4vw,56px)">That's all <span id="chDoneN">10</span> questions! 🎉<br>Time to spin and open cases.</div>
+        <div class="betcard" style="border-color:#fff;font-size:clamp(26px,3.4vw,56px)">That's all <span id="chDoneN">10</span> questions! 🎉<br>Time to spin and open cases.<div class="sub hidden" id="chDoneGift" style="margin-top:8px;font-size:.6em">Here's a spin to get you started! 🎡</div></div>
         <div class="row">
           <button class="big gold" id="doneWheel">🎡 Go to the Wheel</button>
           <button class="big cyan" id="doneCases">💼 Go to the Briefcases</button>
@@ -319,6 +322,22 @@ main{padding:10px 24px 40px}
 
   <!-- SETUP -->
   <section class="screen setup" id="screen-setup">
+    <div class="panel" id="grantPanel">
+      <h2>🎁 Host: give spins, cases &amp; trivia</h2>
+      <div class="sub" id="grantCounts"></div>
+      <div class="row grantrow" style="justify-content:flex-start;margin-top:10px">
+        <button class="big gold" id="grantSpin">+1 spin</button>
+        <button class="big gold" id="grantCase">+1 case</button>
+        <button class="med" data-adj="spins:-1">−1 spin</button>
+        <button class="med" data-adj="picks:-1">−1 case</button>
+      </div>
+      <div class="row grantrow" style="justify-content:flex-start;margin-top:10px">
+        <button class="big gold" id="grantTrivia">+1 trivia</button>
+        <button class="med" id="dropTrivia">−1 trivia</button>
+      </div>
+      <div class="sub" id="triviaNote" style="margin-top:6px">
+      </div>
+    </div>
     <div class="panel" id="syncPanel">
       <h2>📡 Live sync (phone · laptop · TV)</h2>
       <div class="sub" id="syncDesc"></div>
@@ -334,16 +353,7 @@ main{padding:10px 24px 40px}
     </div>
     <div class="panel">
       <h2>🎂 Party</h2>
-      <div class="grid2">
-        <div><label>Birthday person's name</label><br><input id="cfgName" style="width:100%;font-size:24px"></div>
-        <div>
-          <label>Manual adjust (host)</label>
-          <div class="row" style="justify-content:flex-start;margin-top:6px">
-            <button class="med" data-adj="picks:-1">−1 case</button><button class="med" data-adj="picks:1">+1 case</button>
-            <button class="med" data-adj="spins:-1">−1 spin</button><button class="med" data-adj="spins:1">+1 spin</button>
-          </div>
-        </div>
-      </div>
+      <div><label>Birthday person's name</label><br><input id="cfgName" style="width:100%;max-width:640px;font-size:24px"></div>
     </div>
     <div class="panel">
       <h2>❓ Trivia questions</h2>
@@ -434,7 +444,8 @@ const DEFAULT_CONFIG = {
     {q:'What was the best-selling video game of the 1990s on the original PlayStation?', options:['Crash Bandicoot','Gran Turismo','Final Fantasy VII','Tekken 3'], answer:1},
     {q:'Which show featured the catchphrase "Did I do that?"', options:['Full House','Family Matters','Saved by the Bell','Boy Meets World'], answer:1},
     {q:'Fun fact: 39 is the sum of how many consecutive primes (3+5+7+11+13)?', options:['3','4','5','6'], answer:2},
-    {q:'Which 1997 movie was the first to earn over $1 billion worldwide?', options:['Jurassic Park','Titanic','Independence Day','Men in Black'], answer:1}
+    {q:'Which 1997 movie was the first to earn over $1 billion worldwide?', options:['Jurassic Park','Titanic','Independence Day','Men in Black'], answer:1},
+    {q:'🍺 In which Ontario city is Sleeman Breweries based?', options:['Hamilton','Guelph','London','Kitchener'], answer:1}
   ],
   wheel: [
     {label:'+1 CASE',  type:'picks', value:1,  color:'#1e5bc6'},
@@ -516,7 +527,7 @@ function freshGame(){ const b=newBoard(); return {spins:0,picks:0,qAnswered:0,ca
 function normGame(g){
   if(!g || !Array.isArray(g.cases) || !Array.isArray(g.pool)) return freshGame();
   const out=Object.assign(freshGame(), g);
-  out.spins=Math.max(0,out.spins|0); out.picks=Math.max(0,out.picks|0); out.qAnswered=Math.max(0,out.qAnswered|0);
+  out.spins=Math.max(0,out.spins|0); out.picks=Math.max(0,out.picks|0); out.qAnswered=Math.max(0,out.qAnswered|0); out.extraQ=out.extraQ|0;
   out.log=(Array.isArray(out.log)?out.log:[]).map(renamePicks);
   return out;
 }
@@ -555,7 +566,8 @@ function renderScore(){
     if(p.textContent!==String(game.picks)){ p.textContent=game.picks; bump('sPicks'); }
     if(s.textContent!==String(game.spins)){ s.textContent=game.spins; bump('sSpins'); }
   }
-  $('title').textContent = '🍁 ' + (config.name||'Birthday') + "'s Birthday Bonanza!";
+  $('title').textContent = '🍁 ' + (config.name||'Birthday') + "'s Birthday Bonanza! 🍺";
+  if($('grantCounts')) $('grantCounts').textContent = 'Now: '+game.picks+' case'+(game.picks===1?'':'s')+' · '+game.spins+' spin'+(game.spins===1?'':'s');
   document.title = (config.name||'Birthday') + "'s Birthday Bonanza";
   $('muteBtn').textContent = muted ? '🔇' : '🔊';
   updateSpinUI(); renderCasesInfo(); renderChallengeState();
@@ -569,7 +581,6 @@ function show(name){
   if(name==='wheel') drawWheel();
   if(name==='cases') renderCases();
   if(name==='setup') renderSetup();
-  updateNavGrant();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav button[data-screen]').forEach(b=>b.addEventListener('click',()=>{ sfx.click(); show(b.dataset.screen); }));
@@ -640,7 +651,24 @@ function randomQuestion(){
   if(!pool.length){ game.usedTrivia=[]; pool=config.trivia.map((_,i)=>i).filter(i=>i!==curQ); if(!pool.length) pool=[0]; toast('All questions used — starting over!'); }
   return pool[Math.floor(Math.random()*pool.length)];
 }
-function qPerGame(){ return Math.max(1,Math.min(config.questionsPerGame||10, config.trivia.length||1)); }
+function baseQPerGame(){ return Math.max(1,Math.min(config.questionsPerGame||10, config.trivia.length||1)); }
+function qPerGame(){ return Math.max(1,Math.min(baseQPerGame()+(game.extraQ|0), config.trivia.length||1)); }
+function unusedQuestions(){ return Math.max(0,config.trivia.length-game.usedTrivia.filter(i=>i>=0&&i<config.trivia.length).length); }
+function canAddTrivia(){ return (qPerGame()-game.qAnswered) < unusedQuestions() && qPerGame() < config.trivia.length; }
+function canDropTrivia(){ return qPerGame() > Math.max(1, game.qAnswered + (curQ>=0 && !judged && !$('chTrivia').classList.contains('hidden') ? 1 : 0)); }
+function renderTriviaGrant(){
+  const a=$('grantTrivia'), d=$('dropTrivia'), n=$('triviaNote'); if(!a) return;
+  a.disabled=!canAddTrivia(); d.disabled=!canDropTrivia();
+  const left=unusedQuestions()-Math.max(0,qPerGame()-game.qAnswered);
+  n.textContent='Trivia: '+game.qAnswered+' of '+qPerGame()+' asked'+((game.extraQ|0)?' ('+((game.extraQ>0?'+':'')+game.extraQ)+' this game)':'')+' · '+(left>0? left+' more question'+(left===1?'':'s')+' available' : 'no more unused questions');
+}
+function adjustTrivia(d){
+  if(d>0 ? !canAddTrivia() : !canDropTrivia()) return;
+  const before=qPerGame(); game.extraQ=(game.extraQ|0)+d;
+  if(qPerGame()===before){ game.extraQ-=d; return; }
+  addLog(d>0 ? 'Host granted +1 trivia question' : 'Host removed 1 trivia question');
+  save(); renderScore(); renderChallengeState(); renderTriviaGrant(); sfx.click();
+}
 function triviaDone(){ return game.qAnswered>=qPerGame(); }
 function unopenedCount(){ return game.cases.filter(c=>!c.opened).length; }
 function renderChallengeState(){
@@ -649,6 +677,8 @@ function renderChallengeState(){
   $('chPickSub').classList.toggle('hidden',done);
   $('chDone').classList.toggle('hidden',!done);
   $('chDoneN').textContent=qPerGame();
+  renderTriviaGrant();
+  $('chDoneGift').classList.toggle('hidden',!game.starterSpin);
   $('chPick').querySelector('.headline').textContent = done ? 'Trivia complete!' : (game.qAnswered ? 'Ready for the next question?' : 'Ready for a trivia question?');
 }
 function startTrivia(i){
@@ -680,11 +710,9 @@ function judgeRound(won, what){
   game.qAnswered++;
   if(won){ game.spins++; v.textContent='🎉 WINNER! +1 SPIN'; v.className='verdict win'; confetti(); sfx.win(); addLog(what+': WON (+1 spin)'); }
   else { v.textContent='❌ NOT THIS TIME!'; v.className='verdict lose'; sfx.lose(); addLog(what+': lost'); }
-  let bonus=false;
-  if(triviaDone() && game.spins===0 && game.picks===0 && unopenedCount()>0){ game.spins=1; bonus=true; addLog('Bonus spin'); }
-  newEv(won?'win':'lose',{what, bonus});
+  if(triviaDone() && game.spins===0 && game.picks===0 && unopenedCount()>0){ game.spins=1; game.starterSpin=true; addLog('Starter spin (+1)'); }
+  newEv(won?'win':'lose',{what});
   save(); renderScore();
-  if(bonus) setTimeout(()=>{ toast('Bonus spin! 🎡'); confetti(120); },900);
   $('tHostRow').classList.add('hidden'); $('tAfter').classList.remove('hidden'); $('tGoSpin').classList.toggle('hidden',game.spins<1);
   $('tNext').textContent = triviaDone() ? 'Continue ➜' : 'Next question ➜';
 }
@@ -790,9 +818,10 @@ function spin(){
 $('spinBtn').addEventListener('click',spin);
 $('wheel').addEventListener('click',spin);
 function hostGrant(kind){ game[kind]++; addLog('Host granted +1 '+(kind==='picks'?'case':'spin')); save(); renderScore(); sfx.click(); }
-function navGrantKind(){ return currentScreen()==='cases' ? 'picks' : 'spins'; }
-function updateNavGrant(){ const b=$('grantSpin'), k=navGrantKind(); b.textContent = k==='picks' ? '+1 case' : '+1 spin'; b.title = k==='picks' ? 'Host: give 1 case' : 'Host: give 1 spin'; }
-$('grantSpin').addEventListener('click',()=>hostGrant(navGrantKind()));
+$('grantSpin').addEventListener('click',()=>hostGrant('spins'));
+$('grantCase').addEventListener('click',()=>hostGrant('picks'));
+$('grantTrivia').addEventListener('click',()=>adjustTrivia(1));
+$('dropTrivia').addEventListener('click',()=>adjustTrivia(-1));
 $('wheelHub').addEventListener('click',spin);
 
 /* ---------- Briefcases ---------- */
@@ -806,10 +835,11 @@ function renderCases(){
   const g=$('caseGrid'); g.innerHTML='';
   game.cases.forEach((c,i)=>{
     const p=parsePrize(c.content);
-    const d=el('div',{className:'case'+(c.opened?(' opened '+(c.grand?'prize grand':(p?'prize':'empty'))):'')}, el('span',{className:'num',textContent:i+1}));
+    const d=el('div',{className:'case'+(c.opened?(' opened '+(c.grand?'prize grand':(p?'prize':(c.spinCase?'spincase':'empty')))):'')}, el('span',{className:'num',textContent:i+1}));
     if(c.opened){
       if(p && p.img) d.append(el('img',{className:'thumb',src:p.img,alt:''}));
-      d.append(el('div',{className:'content',textContent: c.grand ? '🏆 '+p.text : (p ? '🎁 '+p.text : 'Nothing')}));
+      const sc=c.spinCase ? '🎡 +'+c.spinCase+' Spin'+(c.spinCase===1?'':'s') : '';
+      d.append(el('div',{className:'content',textContent: c.grand ? '🏆 '+p.text : (p ? '🎁 '+p.text+(sc?' + '+sc:'') : (sc||'Nothing'))}));
     } else { d.setAttribute('role','button'); d.style.cursor='pointer'; d.addEventListener('click',()=>openCase(i)); }
     g.append(d);
   });
@@ -819,6 +849,7 @@ function drawIndex(){
   const has=(x,re)=>x!=null && re.test(String(x));
   let cand=game.pool.map((_,k)=>k);
   if(game.pool.some(x=>has(x,/sleeman/i))){ const f=cand.filter(k=>!has(game.pool[k],/more\s*beer/i)); if(f.length) cand=f; }
+  if(game.pool.filter(x=>x==null).length<=4){ const f=cand.filter(k=>game.pool[k]!=null); if(f.length) cand=f; }
   return cand[Math.floor(Math.random()*cand.length)];
 }
 function openCase(i){
@@ -826,19 +857,26 @@ function openCase(i){
   if(game.picks<1){ toast('No cases to open — spin the wheel to earn more!'); sfx.lose(); return; }
   const left=game.cases.filter(x=>!x.opened).length;
   const grandGiven=game.cases.some(x=>x.grand);
+  const needSpin = game.picks-1===0 && game.spins===0 && left-1>0;
   if(config.grandPrize && !grandGiven && (left===1 || !game.pool.length)){ c.content=config.grandPrize; c.grand=true; }
+  else if(needSpin){
+    const n = Math.random()<0.3 ? 2 : 1, ei=game.pool.indexOf(null);
+    if(ei>=0){ game.pool.splice(ei,1); c.content=null; }
+    else c.content=game.pool.length ? game.pool.splice(drawIndex(),1)[0] : null;
+    c.spinCase=n;
+  }
   else if(game.pool.length){ c.content=game.pool.splice(drawIndex(),1)[0]; }
   else c.content=null;
   c.opened=true; game.picks--;
+  if(c.spinCase) game.spins+=c.spinCase;
   const p=parsePrize(c.content);
-  addLog('Opened case #'+(i+1)+': '+(c.grand?'GRAND PRIZE — ':'')+(p?p.text:'Nothing'));
-  let bonus=false;
-  if(game.picks===0 && game.spins===0 && unopenedCount()>0){ game.spins=1; bonus=true; addLog('Bonus spin'); }
-  newEv('open',{idx:i, bonus});
+  addLog('Opened case #'+(i+1)+': '+(c.grand?'GRAND PRIZE — ':'')+(p?p.text:(c.spinCase?'':'Nothing'))+(c.spinCase?(p?' + ':'')+spinCaseText(c.spinCase):''));
+  newEv('open',{idx:i});
   save(); renderScore();
-  playReveal(i, bonus);
+  playReveal(i);
 }
-function playReveal(i, bonus){
+function spinCaseText(n){ return '+'+n+' SPIN'+(n===1?'':'S')+' 🎡'; }
+function playReveal(i){
   const c=game.cases[i]; if(!c) return;
   revealing=true; holdScore=true;
   const grand=!!c.grand, p=parsePrize(c.content);
@@ -865,12 +903,13 @@ function playReveal(i, bonus){
       setTimeout(()=>confetti(300,{colors:LEAFS_COLORS,leaves:true}),2700);
       setTimeout(()=>confetti(260,{colors:LEAFS_COLORS,leaves:true}),4300);
     } else if(p){
-      tx.textContent='🎁 '+p.text+'!'; tx.className='revealtext show'; $('ovLabel').textContent='Briefcase #'+(i+1)+' contains…'; confetti(320); sfx.win();
+      tx.textContent='🎁 '+p.text+'!'+(c.spinCase?' + '+spinCaseText(c.spinCase):''); tx.className='revealtext show'; $('ovLabel').textContent='Briefcase #'+(i+1)+' contains…'; confetti(320); sfx.win();
+    } else if(c.spinCase){
+      tx.textContent=spinCaseText(c.spinCase).replace(' 🎡','! 🎡'); tx.className='revealtext show spintext'; $('ovLabel').textContent='Briefcase #'+(i+1)+' contains…'; confetti(200,{colors:LEAFS_COLORS}); sfx.win();
     } else {
       tx.textContent='Nothing… 😅'; tx.className='revealtext show nothing'; $('ovLabel').textContent='Briefcase #'+(i+1)+' is…'; sfx.lose();
     }
     $('ovClose').classList.remove('hidden'); revealing=false; renderCases();
-    if(bonus) setTimeout(()=>{ toast('Bonus spin! 🎡'); sfx.reveal(); }, 1200);
   }, wait+500);
 }
 $('ovClose').addEventListener('click',()=>{ $('caseOverlay').classList.remove('show','grand'); sfx.click(); renderCases(); });
@@ -880,13 +919,14 @@ function playRemoteEvent(ev){
   if(!ev || seenEv.has(ev.id)) return; seenEv.add(ev.id);
   if(Math.abs(Date.now()-(ev.at||0))>90000) return; // stale
   if(ev.type==='spin' && config.wheel[ev.target]){ if(currentScreen()!=='wheel') show('wheel'); if(!spinning) animateSpin(ev.target); }
-  else if(ev.type==='open' && game.cases[ev.idx]){ if(currentScreen()!=='cases') show('cases'); if(!revealing) playReveal(ev.idx, ev.bonus); }
+  else if(ev.type==='open' && game.cases[ev.idx]){ if(currentScreen()!=='cases') show('cases'); if(!revealing) playReveal(ev.idx); }
   else if(ev.type==='win'){ confetti(); sfx.win(); toast('🎉 '+(config.name||'Birthday star')+' WON: '+ev.what+' (+1 spin)'); }
-  else if(ev.type==='lose'){ sfx.lose(); toast('❌ Lost: '+ev.what); if(ev.bonus) setTimeout(()=>toast('Bonus spin! 🎡'),2500); }
+  else if(ev.type==='lose'){ sfx.lose(); toast('❌ Lost: '+ev.what); }
 }
 
 /* ---------- Setup ---------- */
 function renderSetup(){
+  renderTriviaGrant();
   $('cfgName').value=config.name;
   $('cfgQPer').value=config.questionsPerGame;
   $('cfgGrand').value=config.grandPrize;
